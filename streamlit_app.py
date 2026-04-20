@@ -1,85 +1,61 @@
+import streamlit as st
+import streamlit.components.v1 as components
+
+# 1. 페이지 설정
+st.set_page_config(page_title="학교 자판기 가이드", layout="centered")
+
+# 2. 제목 부분
+st.title("🥤 우리 학교 자판기 알뜰 매니저")
+st.subheader("합리적인 소비 습관을 만들어봐요!")
+
+# 3. HTML/JavaScript 코드 (안전하게 변수에 담기)
+html_content = """
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>학교 자판기 알뜰 가이드</title>
     <style>
-        body { font-family: 'Nanum Gothic', sans-serif; line-height: 1.6; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; text-align: center; }
-        .section { margin-bottom: 30px; padding: 15px; border-bottom: 1px solid #eee; }
-        label { display: block; margin-bottom: 10px; font-weight: bold; }
-        input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #2980b9; }
-        #result { margin-top: 15px; padding: 15px; background: #e8f4fd; border-radius: 5px; font-weight: bold; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
-        th { background-color: #f8f9fa; }
-        .price-up { color: #e74c3c; font-weight: bold; }
+        .box { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd; font-family: sans-serif; }
+        input { width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #result { margin-top: 15px; font-weight: bold; color: #2c3e50; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 14px; }
+        th { background-color: #f2f2f2; }
     </style>
 </head>
 <body>
+    <div class="box">
+        <label>💰 이번 주 내 용돈 (원):</label>
+        <input type="number" id="money" placeholder="예: 30000">
+        <button onclick="calc()">적정 횟수 계산하기</button>
+        <div id="result">금액을 입력해 주세요.</div>
 
-<div class="container">
-    <h1>🏫 자판기 알뜰 매니저</h1>
-
-    <div class="section">
-        <h3>💰 나의 주간 소비 한도 계산</h3>
-        <label>일주일 총 용돈: <input type="number" id="allowance" placeholder="예: 30000"></label>
-        <label>음료 1개 평균 가격: <input type="number" id="avgPrice" value="1000"></label>
-        <button onclick="calculate()">적정 횟수 확인하기</button>
-        <div id="result">용돈을 입력하면 결과가 나옵니다.</div>
-    </div>
-
-    <div class="section">
-        <h3>📊 편의점 vs 자판기 가격 비교</h3>
         <table>
-            <thead>
-                <tr>
-                    <th>품목</th>
-                    <th>자판기</th>
-                    <th>편의점</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>캔커피</td>
-                    <td>800원</td>
-                    <td class="price-up">1,200원</td>
-                </tr>
-                <tr>
-                    <td>이온음료</td>
-                    <td>1,000원</td>
-                    <td class="price-up">1,500원</td>
-                </tr>
-                <tr>
-                    <td>생수</td>
-                    <td>600원</td>
-                    <td>600원</td>
-                </tr>
-            </tbody>
+            <tr><th>품목</th><th>자판기</th><th>편의점</th></tr>
+            <tr><td>커피</td><td>800원</td><td>1,200원</td></tr>
+            <tr><td>이온음료</td><td>1,000원</td><td>1,500원</td></tr>
+            <tr><td>생수</td><td>600원</td><td>600원</td></tr>
         </table>
-        <p style="font-size: 0.8em; color: #7f8c8d; margin-top:10px;">* 학교 자판기가 보통 20~30% 더 저렴합니다!</p>
     </div>
-</div>
 
-<script>
-    function calculate() {
-        const allowance = document.getElementById('allowance').value;
-        const avgPrice = document.getElementById('avgPrice').value;
-        const resultDiv = document.getElementById('result');
-
-        if(allowance > 0) {
-            // 용돈의 10%를 자판기 적정 예산으로 설정 (예시 로직)
-            const limit = Math.floor((allowance * 0.1) / avgPrice);
-            resultDiv.innerHTML = `이번 주 권장 횟수는 최대 <span style="color:#e67e22">${limit}회</span> 입니다!<br>
-                                   (용돈의 10% 사용 기준)`;
-        } else {
-            resultDiv.innerHTML = "용돈을 올바르게 입력해주세요.";
+    <script>
+        function calc() {
+            var m = document.getElementById('money').value;
+            var res = document.getElementById('result');
+            if(m > 0) {
+                // 용돈의 10%를 자판기 예산으로 설정, 음료당 1000원 가정
+                var count = Math.floor((m * 0.1) / 1000);
+                res.innerHTML = "이번 주 권장 횟수는 <span style='color:red'>" + count + "회</span> 입니다!";
+            } else {
+                res.innerHTML = "숫자를 입력해 주세요!";
+            }
         }
-    }
-</script>
-
+    </script>
 </body>
 </html>
+"""
+
+# 4. Streamlit에 HTML 반영
+components.html(html_content, height=500)
+
+st.info("💡 팁: 자판기를 이용하기 전, 이 계산기를 통해 이번 주 예산을 확인하세요!")
