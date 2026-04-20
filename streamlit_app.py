@@ -1,61 +1,64 @@
 import streamlit as st
-import streamlit.components.v1 as components
 
 # 1. 페이지 설정
-st.set_page_config(page_title="학교 자판기 가이드", layout="centered")
+st.set_page_config(page_title="학교 자판기 알뜰 가이드", layout="wide")
 
-# 2. 제목 부분
-st.title("🥤 우리 학교 자판기 알뜰 매니저")
-st.subheader("합리적인 소비 습관을 만들어봐요!")
+st.title("🥤 학교 자판기 합리적 소비")
+st.write("합리적인 소비를 위한 우리들의 가이드")
+st.divider()
 
-# 3. HTML/JavaScript 코드 (안전하게 변수에 담기)
-html_content = """
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        .box { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd; font-family: sans-serif; }
-        input { width: 100%; padding: 8px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        button { width: 100%; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        #result { margin-top: 15px; font-weight: bold; color: #2c3e50; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 14px; }
-        th { background-color: #f2f2f2; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <label>💰 이번 주 내 용돈 (원):</label>
-        <input type="number" id="money" placeholder="예: 30000">
-        <button onclick="calc()">적정 횟수 계산하기</button>
-        <div id="result">금액을 입력해 주세요.</div>
+# 2. 화면 분할 (좌측: 계산기, 우측: 가격 검색)
+col1, col2 = st.columns(2)
 
-        <table>
-            <tr><th>품목</th><th>자판기</th><th>편의점</th></tr>
-            <tr><td>커피</td><td>800원</td><td>1,200원</td></tr>
-            <tr><td>이온음료</td><td>1,000원</td><td>1,500원</td></tr>
-            <tr><td>생수</td><td>600원</td><td>600원</td></tr>
-        </table>
-    </div>
+# --- 왼쪽: 용돈 계산기 ---
+with col1:
+    st.header("💰 용돈 관리 계산기")
+    allowance = st.number_input("이번 주 총 용돈을 입력하세요 (원)", min_value=0, step=1000, value=30000)
+    avg_price = st.number_input("자판기 음료 평균 가격 (원)", min_value=0, step=100, value=1000)
+    
+    # 예산 비중 설정 (예: 용돈의 10%만 자판기에 쓰기)
+    ratio = st.slider("용돈 중 자판기에 쓸 비중 (%)", 0, 100, 10)
+    
+    budget = allowance * (ratio / 100)
+    count = int(budget / avg_price) if avg_price > 0 else 0
+    
+    st.info(f"이번 주 자판기용 예산은 **{budget:,.0f}원**입니다.")
+    st.success(f"일주일에 최대 **{count}번** 마시는 것을 추천해요!")
 
-    <script>
-        function calc() {
-            var m = document.getElementById('money').value;
-            var res = document.getElementById('result');
-            if(m > 0) {
-                // 용돈의 10%를 자판기 예산으로 설정, 음료당 1000원 가정
-                var count = Math.floor((m * 0.1) / 1000);
-                res.innerHTML = "이번 주 권장 횟수는 <span style='color:red'>" + count + "회</span> 입니다!";
-            } else {
-                res.innerHTML = "숫자를 입력해 주세요!";
-            }
-        }
-    </script>
-</body>
-</html>
-"""
+# --- 오른쪽: 품목 검색 및 가격 비교 ---
+with col2:
+    st.header("🔍 품목 가격 비교")
+    
+    # 가상의 가격 데이터 (실제 웹 데이터를 대신함)
+    item_data = {
+        "포카리스웨트": {"자판기": 1000, "편의점": 1500, "마트": 1200},
+        "레쓰비": {"자판기": 800, "편의점": 1200, "마트": 900},
+        "코카콜라": {"자판기": 1200, "편의점": 1800, "마트": 1500},
+        "생수": {"자판기": 600, "편의점": 800, "마트": 500},
+        "초코우유": {"자판기": 1000, "편의점": 1600, "마트": 1300}
+    }
+    
+    search_query = st.text_input("궁금한 음료 이름을 입력하세요", placeholder="예: 포카리스웨트")
+    
+    if search_query:
+        # 검색 기능 (이름이 포함되면 출력)
+        results = {k: v for k, v in item_data.items() if search_query in k}
+        
+        if results:
+            for item, prices in results.items():
+                st.subheader(f"[{item}] 가격 정보")
+                
+                # 가로로 지표 표시
+                c1, c2, c3 = st.columns(3)
+                c1.metric("자판기", f"{prices['자판기']}원")
+                c2.metric("편의점", f"{prices['편의점']}원", f"{prices['자판기'] - prices['편의점']}원")
+                c3.metric("마트", f"{prices['마트']}원", f"{prices['자판기'] - prices['마트']}원")
+                
+                st.caption("※ 자판기가 편의점보다 얼마나 저렴한지 빨간색 수치로 표시됩니다.")
+        else:
+            st.error("아직 데이터가 없는 품목입니다. 다른 이름을 검색해 보세요!")
+    else:
+        st.write("위에 음료 이름을 입력하면 가격을 비교해 드립니다.")
 
-# 4. Streamlit에 HTML 반영
-components.html(html_content, height=500)
-
-st.info("💡 팁: 자판기를 이용하기 전, 이 계산기를 통해 이번 주 예산을 확인하세요!")
+st.divider()
+st.caption("© 2026 우리 학교 합리적 소비 동아리 | 데이터는 주기적으로 업데이트됩니다.")
