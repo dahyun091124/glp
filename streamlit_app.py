@@ -220,5 +220,5 @@ html_code = """
 </html>
 """
 
-# 3. 스트림릿 컴포넌트로 HTML 렌더링 (스크롤바 없이 꽉 차게 띄우기)
-st.components.v1.html(html_code, height=2200, scroller=True)
+# 3. 컴포넌트 렌더링 수정 (scroller 매개변수 제거 및 scrolling=True 설정)
+st.components.v1.html(html_code, height=2200, scrolling=True)
