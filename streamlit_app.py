@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+import altair as alt
 
 # 1. 스트림릿 페이지 설정
 st.set_page_config(
@@ -7,288 +9,140 @@ st.set_page_config(
     layout="wide"
 )
 
-# 2. HTML 및 차트 로직 정의
+# --- 2. 실제 데이터로 막대 그래프 그리기 (스트림릿 네이티브 차트) ---
+st.title("🌿 GLP 4조 | 소비 가이드북 : 특별편")
+st.caption("지속가능한 생산과 소비를 위한 가이드")
+st.markdown("---")
+
+st.header("📊 설문 결과 분석")
+st.subheader("우리가 가장 많이 소비하는 분야와 장소는 어디일까요?")
+
+# 차트용 컬럼 배치
+col1, col2 = st.columns(2)
+
+with col1:
+    st.write("### 가장 많이 소비한 분야는?")
+    # 실제 데이터셋 생성
+    category_data = pd.DataFrame({
+        '분야': ['음식', '여가활동', '의류', '교육'],
+        '비율 (%)': [65, 25, 12, 5]
+    })
+    # Altair를 이용한 세련된 막대 그래프 정의
+    chart1 = alt.Chart(category_data).mark_bar(cornerRadiusTopLeft=8, cornerRadiusTopRight=8, color='#166534').encode(
+        x=alt.X('분야:N', sort=None, axis=alt.Axis(labelAngle=0)),
+        y=alt.Y('비율 (%):Q', scale=alt.Scale(domain=[0, 80])),
+        tooltip=['분야', '비율 (%)']
+    ).properties(height=350)
+    
+    st.altair_chart(chart1, use_container_width=True)
+
+with col2:
+    st.write("### 가장 많이 소비한 장소는?")
+    place_data = pd.DataFrame({
+        '장소': ['백마', '마두', '집 동네'],
+        '비율 (%)': [58, 42, 22]
+    })
+    chart2 = alt.Chart(place_data).mark_bar(cornerRadiusTopLeft=8, cornerRadiusTopRight=8, color='#15803d').encode(
+        x=alt.X('장소:N', sort=None, axis=alt.Axis(labelAngle=0)),
+        y=alt.Y('비율 (%):Q', scale=alt.Scale(domain=[0, 80])),
+        tooltip=['장소', '비율 (%)']
+    ).properties(height=350)
+    
+    st.altair_chart(chart2, use_container_width=True)
+
+
+# --- 3. 하단 콘텐츠 및 MANUS 연동 (HTML 컴포넌트 처리) ---
 html_code = """
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        * { box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Lato', sans-serif;
-            background-color: #f8fafc;
-            color: #334155;
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #fcfbf7;
         }
-
-        /* 공통 섹션 스타일 */
-        .section-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 80px 20px;
-        }
-
         .accent-color { color: #166534; }
         .bg-accent { background-color: #166534; }
-
-        /* 헤더 디자인 */
-        header {
-            background: white;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 20px 0;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .header-content {
-            max-width: 1100px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        .logo { font-size: 24px; font-weight: 700; color: #166534; font-family: 'Poppins'; }
-
-        /* 메인 비주얼 */
-        .hero { text-align: center; padding: 100px 20px; background-color: #f1f5f9; }
-        .hero h1 { font-size: 56px; margin-bottom: 20px; font-family: 'Poppins'; color: #0f172a; }
-        .hero p { font-size: 20px; color: #64748b; max-width: 700px; margin: 0 auto 40px; }
-
-        /* 설문 결과 그래프 레이아웃 */
-        .chart-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-top: 50px;
-        }
-
-        .chart-card {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            text-align: center;
-        }
-
-        .chart-card h3 {
-            font-size: 20px;
-            margin-bottom: 30px;
-            color: #1e293b;
-            font-family: 'Poppins';
-        }
-
-        /* 실제 막대 그래프 구현 */
-        .bar-container {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-around;
-            height: 250px;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-
-        .bar-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 60px;
-        }
-
-        .bar {
-            width: 100%;
-            background: linear-gradient(to top, #166534, #22c55e);
-            border-radius: 8px 8px 0 0;
-            transition: height 1s ease-in-out;
-            position: relative;
-        }
-
-        .bar-value {
-            position: absolute;
-            top: -25px;
-            font-weight: 700;
-            font-size: 14px;
-            color: #166534;
-        }
-
-        .bar-label {
-            margin-top: 15px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #64748b;
-        }
-
-        /* 플리마켓 리스트 */
-        .flea-market-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .market-item {
-            background: #fff;
-            padding: 25px;
-            border-left: 5px solid #166534;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-
-        /* 앱 홍보 섹션 */
-        .app-section {
-            background: #0f172a;
-            color: white;
-            border-radius: 30px;
-            padding: 60px;
-            display: flex;
-            align-items: center;
-            gap: 50px;
-            margin-top: 50px;
-        }
-
-        .app-text { flex: 1; }
-        .app-preview { flex: 1; text-align: center; }
-        .app-btn {
-            display: inline-block;
-            background: #22c55e;
-            color: #0f172a;
-            padding: 15px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 700;
-            margin-top: 20px;
-        }
-
+        .market-card:hover { transform: translateY(-4px); transition: all 0.2s ease; }
     </style>
 </head>
-<body>
+<body class="text-gray-800">
 
-    <header>
-        <div class="header-content">
-            <div class="logo">🌿 GLP 4조</div>
-            <div style="font-size: 14px; color: #64748b; font-weight: 500;">지속가능한 생산과 소비를 위한 가이드</div>
-        </div>
-    </header>
-
-    <section class="hero">
-        <div class="section-container">
-            <h1>다시 쓰는 순간, <span class="accent-color">가치</span>가 된다</h1>
-            <p>우리의 소비 습관을 돌아보고, 더 나은 미래를 위해 일상을 기록하는 습관. GLP 4조와 MANUS가 함께합니다.</p>
-        </div>
-    </section>
-
-    <section class="section-container" id="survey">
-        <div style="text-align: center; margin-bottom: 60px;">
-            <h2 style="font-size: 32px; font-family: 'Poppins';">📊 설문 결과 분석</h2>
-            <p style="color: #64748b;">우리가 가장 많이 소비하는 분야와 장소는 어디일까요?</p>
-        </div>
-
-        <div class="chart-grid">
-            <div class="chart-card">
-                <h3>가장 많이 소비한 분야는?</h3>
-                <div class="bar-container">
-                    <div class="bar-wrapper">
-                        <div class="bar" style="height: 65%;">
-                            <span class="bar-value">65%</span>
-                        </div>
-                        <span class="bar-label">음식</span>
-                    </div>
-                    <div class="bar-wrapper">
-                        <div class="bar" style="height: 25%; opacity: 0.7;">
-                            <span class="bar-value">25%</span>
-                        </div>
-                        <span class="bar-label">여가</span>
-                    </div>
-                    <div class="bar-wrapper">
-                        <div class="bar" style="height: 12%; opacity: 0.5;">
-                            <span class="bar-value">12%</span>
-                        </div>
-                        <span class="bar-label">의류</span>
-                    </div>
-                    <div class="bar-wrapper">
-                        <div class="bar" style="height: 5%; opacity: 0.3;">
-                            <span class="bar-value">5%</span>
-                        </div>
-                        <span class="bar-label">교육</span>
-                    </div>
+    <section class="max-w-6xl mx-auto px-4 py-12">
+        <h2 class="text-2xl font-bold mb-2 flex items-center gap-2">
+            <span class="accent-color">📍</span> 지역 플리마켓 가이드
+        </h2>
+        <p class="text-sm text-gray-500 mb-8">위치를 클릭하면 실제 지도 화면으로 연결되어 길을 찾을 수 있습니다.</p>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="market-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                <div>
+                    <span class="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-bold">진행 예정</span>
+                    <h3 class="font-bold text-xl mt-3 text-gray-900">가정의 달 플리마켓 in 고양</h3>
+                    <p class="text-sm text-gray-600 mt-2"><b>날짜:</b> 2026년 5월 5일 ~ 15일</p>
+                    <p class="text-sm text-gray-600"><b>품목:</b> 핸드메이드 소품, 어린이 장난감, 중고책</p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <a href="https://map.naver.com/v5/search/%EB%B0%B1%EB%A7%88%EA%B5%90%ED%9A%8C" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold text-green-700 hover:text-green-900">
+                        <i class="fa-solid fa-map-location-dot"></i> 위치: 백마교회 옆 공원 (지도 보기) →
+                    </a>
                 </div>
             </div>
 
-            <div class="chart-card">
-                <h3>가장 많이 소비한 장소는?</h3>
-                <div class="bar-container">
-                    <div class="bar-wrapper">
-                        <div class="bar" style="height: 58%;">
-                            <span class="bar-value">58%</span>
-                        </div>
-                        <span class="bar-label">백마</span>
-                    </div>
-                    <div class="bar-wrapper">
-                        <div class="bar" style="height: 42%; opacity: 0.7;">
-                            <span class="bar-value">42%</span>
-                        </div>
-                        <span class="bar-label">마두</span>
-                    </div>
-                    <div class="bar-wrapper">
-                        <div class="bar" style="height: 22%; opacity: 0.4;">
-                            <span class="bar-value">22%</span>
-                        </div>
-                        <span class="bar-label">집 동네</span>
-                    </div>
+            <div class="market-card bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+                <div>
+                    <span class="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-bold">진행 예정</span>
+                    <h3 class="font-bold text-xl mt-3 text-gray-900">고양시청년센터 청년 플리마켓</h3>
+                    <p class="text-sm text-gray-600 mt-2"><b>날짜:</b> 2026년 6월 15일 ~ 17일</p>
+                    <p class="text-sm text-gray-600"><b>품목:</b> 빈티지 의류, 중고책, CD, LP 등</p>
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <a href="https://map.naver.com/v5/search/%EB%A7%88%EB%91%90%EC%97%AD" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold text-green-700 hover:text-green-900">
+                        <i class="fa-solid fa-map-location-dot"></i> 위치: 마두역 사거리 (지도 보기) →
+                    </a>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="section-container" id="flea-market">
-        <h2 style="font-size: 28px; font-family: 'Poppins'; margin-bottom: 30px;">📍 지역 플리마켓 가이드</h2>
-        <div class="flea-market-grid">
-            <div class="market-item">
-                <h4 style="margin: 0; font-size: 18px;">가정의 달 플리마켓</h4>
-                <p style="font-size: 14px; color: #64748b; margin-top: 8px;">백마교회 옆 공원 | 5월 5일 ~ 15일</p>
-                <p style="font-size: 13px; margin-top: 10px;">핸드메이드 소품, 어린이 장난감, 중고책 나눔</p>
-            </div>
-            <div class="market-item">
-                <h4 style="margin: 0; font-size: 18px;">청년 센터 플리마켓</h4>
-                <p style="font-size: 14px; color: #64748b; margin-top: 8px;">마두역 사거리 | 6월 15일 ~ 17일</p>
-                <p style="font-size: 13px; margin-top: 10px;">빈티지 의류, 중고책, CD/LP 컬렉션</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="section-container">
-        <div class="app-section">
-            <div class="app-text">
-                <h2 style="font-size: 36px; margin-bottom: 20px;">기록의 힘, MANUS</h2>
-                <p style="color: #cbd5e1; line-height: 1.6;">
-                    여러분이 실천한 가치 있는 소비와 일상의 순간들을 놓치지 마세요. <br>
-                    <strong>MANUS 앱</strong>을 통해 플리마켓 방문 기록, 업사이클 제품 구매 기록을 나만의 특별한 타임라인으로 만들 수 있습니다.
+    <section class="max-w-6xl mx-auto px-4 py-8">
+        <div class="bg-gray-900 text-white rounded-3xl p-8 md:p-12 grid md:grid-cols-2 gap-8 items-center shadow-xl">
+            <div class="space-y-4">
+                <span class="text-xs font-bold uppercase tracking-widest bg-green-500 text-neutral-900 px-3 py-1 rounded-full">Next-Gen Lifestyle App</span>
+                <h2 class="text-2xl md:text-3xl font-bold tracking-tight">
+                    나의 가치 소비와 일상을<br>
+                    <span class="text-green-400">MANUS</span> 에 기록하세요
+                </h2>
+                <p class="text-gray-400 text-sm leading-relaxed">
+                    브로셔에서 확인한 지속 가능한 가치들, 매번 기억하기 어려우셨나요? <br>
+                    <strong>MANUS(마누스)</strong> 앱을 이용해 여러분이 실천한 친환경 리필, 플리마켓 방문, 업사이클 브랜드 소비 기록을 나만의 특별한 아카이브로 남겨보세요.
                 </p>
-                <a href="https://manus.im/app-preview/i7zPuB3unvW8Ks9MGw6dVT?sessionId=bjA7pGHJXXQ7LHfXgBiYgW" class="app-btn" target="_blank">
-                    <i class="fa-solid fa-mobile-screen-button"></i> 앱에서 시작하기
-                </a>
+                <div class="pt-2">
+                    <a href="https://manus.im/app-preview/i7zPuB3unvW8Ks9MGw6dVT?sessionId=bjA7pGHJXXQ7LHfXgBiYgW" target="_blank" class="inline-flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded-xl font-bold text-xs hover:bg-green-500 transition shadow-lg">
+                        📱 MANUS 앱 미리보기 / 다운로드
+                    </a>
+                </div>
             </div>
-            <div class="app-preview">
-                <div style="background: #1e293b; width: 220px; height: 400px; border-radius: 30px; margin: 0 auto; border: 5px solid #334155; padding: 20px;">
-                    <div style="width: 50px; height: 5px; background: #334155; border-radius: 10px; margin: 0 auto 30px;"></div>
-                    <div style="text-align: left;">
-                        <div style="width: 100%; height: 10px; background: #22c55e; margin-bottom: 10px; border-radius: 5px;"></div>
-                        <div style="width: 80%; height: 10px; background: #475569; margin-bottom: 20px; border-radius: 5px;"></div>
-                        <div style="width: 100%; height: 100px; background: #334155; border-radius: 10px;"></div>
+            <div class="flex justify-center">
+                <div class="bg-gray-800 w-56 h-80 rounded-2xl border-4 border-gray-700 shadow-2xl flex flex-col justify-between p-5 text-center">
+                    <div class="w-12 h-2.5 bg-gray-700 rounded-full mx-auto"></div>
+                    <div class="space-y-2 my-auto">
+                        <span class="text-3xl block">✨</span>
+                        <h4 class="font-bold text-base text-white">MANUS</h4>
+                        <p class="text-[11px] text-gray-400 px-1">당신의 가치 있는 하루를 한눈에 정리하는 스마트 라이프 앱</p>
                     </div>
+                    <div class="bg-gray-700 text-[11px] py-1 px-3 rounded-full text-green-300 font-medium">지금 시작하기</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer style="text-align: center; padding: 60px 0; color: #94a3b8; font-size: 13px; border-top: 1px solid #e2e8f0;">
+    <footer class="max-w-6xl mx-auto px-4 py-8 text-center text-gray-400 text-xs border-t border-gray-100 mt-12">
         <p>© 2026 GLP 4조 Project. All rights reserved.</p>
     </footer>
 
@@ -296,5 +150,5 @@ html_code = """
 </html>
 """
 
-# 3. 컴포넌트 렌더링 (높이는 내용에 맞춰 충분히 2600으로 설정)
-st.components.v1.html(html_code, height=2600, scrolling=True)
+# HTML 컴포넌트 호출
+st.components.v1.html(html_code, height=1200, scrolling=True)
